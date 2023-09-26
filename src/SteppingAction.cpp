@@ -14,19 +14,13 @@ struct Event {
 };
 
 void SteppingAction::UserSteppingAction(const G4Step * step) {
-    
-    if (step->GetTrack()->GetTrackStatus() == fStopAndKill) {
+    auto && point = step->GetPostStepPoint();
+    auto && physical = point->GetTouchableHandle()->GetVolume();
+    if ((physical == nullptr) || (physical->GetLogicalVolume() == DetectorConstruction::Singleton()->worldVolume)) {
         return;
     }
     
-    G4LogicalVolume * volume = step->GetPreStepPoint()->GetTouchableHandle()
-        ->GetVolume()->GetLogicalVolume();
-    
-    if(volume == DetectorConstruction::Singleton()->worldVolume) {
-        return;
-    }
-    
-    G4cout << "XXX An event!" << G4endl;
+    G4cout << "XXX" << G4endl;
     
     auto && track = step->GetTrack();
     track->SetTrackStatus(fStopAndKill);
@@ -39,7 +33,6 @@ void SteppingAction::UserSteppingAction(const G4Step * step) {
     auto && generator = PrimaryGenerator::Singleton();
     event.primary = *generator->event; // XXX if tid == 1 else GetVertexPosition, etc.
     
-    auto && point = step->GetPreStepPoint();
     auto && position = point->GetPosition();
     auto && direction = point->GetMomentumDirection();
     event.detected.energy = point->GetKineticEnergy() / CLHEP::MeV;
