@@ -2,11 +2,16 @@
 #define DETECTOR_CONSTRUCTION_H
 
 #include "G4VUserDetectorConstruction.hh"
+#include "G4VPhysicalVolume.hh"
 
-struct DetectorConstruction : public G4VUserDetectorConstruction {    
+struct DetectorConstruction : public G4VUserDetectorConstruction {
     public:
         static DetectorConstruction * Singleton();
         G4VPhysicalVolume * Construct();
+        
+        G4double outerSize[3], innerSize[3];
+        
+        G4LogicalVolume * worldVolume = nullptr;
     
     private:
         DetectorConstruction();

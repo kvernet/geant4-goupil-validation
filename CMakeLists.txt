@@ -18,6 +18,7 @@ add_library(G4goupil SHARED
     src/DetectorConstruction.cpp include/DetectorConstruction.hh
     src/PhysicsList.cpp include/PhysicsList.hh
     src/PrimaryGenerator.cpp include/PrimaryGenerator.hh
+    src/SteppingAction.cpp include/SteppingAction.hh
 )
 set_target_properties(G4goupil PROPERTIES VERSION ${G4GOUPIL_VERSION})
 target_include_directories(G4goupil PRIVATE include)

@@ -7,7 +7,10 @@
 #include "G4PVPlacement.hh"
 #include "G4VUserDetectorConstruction.hh"
 
-DetectorConstruction::DetectorConstruction() {}
+DetectorConstruction::DetectorConstruction() {
+    outerSize[0] = outerSize[1] = outerSize[2] = 2.0*CLHEP::km;
+    innerSize[0] = innerSize[1] = innerSize[2] = 20.*CLHEP::m;
+}
 
 DetectorConstruction * DetectorConstruction::Singleton() {
     static DetectorConstruction * detector = nullptr;
@@ -22,18 +25,17 @@ G4VPhysicalVolume * DetectorConstruction::Construct() {
     G4LogicalVolume * world = nullptr;
     {
         std::string name = "World";
-        G4double hw = 1.0 * CLHEP::km;
-        auto solid = new G4Box(name, hw, hw, hw);
+        auto solid = new G4Box(name, 0.5*outerSize[0], 0.5*outerSize[1], 0.5*outerSize[2]);
         auto material = manager->FindOrBuildMaterial("G4_AIR");
         world = new G4LogicalVolume(solid, material, name);
     }
+    this->worldVolume = world;
     
     G4LogicalVolume * inner = nullptr;
     {
         std::string name = "Inner";
-        G4double hw = 10. * CLHEP::m;
-        auto solid = new G4Box(name, hw, hw, hw);
-        auto material = manager->FindOrBuildMaterial("G4_Pb");
+        auto solid = new G4Box(name, 0.5*innerSize[0], 0.5*innerSize[1], 0.5*innerSize[2]);
+        auto material = manager->FindOrBuildMaterial("G4_AIR");
         inner = new G4LogicalVolume(solid, material, name);
         new G4PVPlacement(
             nullptr,

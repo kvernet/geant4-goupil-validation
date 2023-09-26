@@ -1,18 +1,19 @@
+#include "DetectorConstruction.hh"
 #include "PrimaryGenerator.hh"
 /* Geant4 interface. */
 #include "G4Event.hh"
 #include "G4ParticleGun.hh"
 #include "G4Gamma.hh"
-#include "G4MuonMinus.hh"
-#include "G4MuonPlus.hh"
-#include "G4Geantino.hh"
+#include "Randomize.hh"
 
 PrimaryGenerator::PrimaryGenerator() : G4VUserPrimaryGeneratorAction() {
+    this->event = new EventState;
     G4int n_particle = 1;
     this->particleGun = new G4ParticleGun(n_particle);
 }
 
 PrimaryGenerator::~PrimaryGenerator() {
+    delete this->event;
     delete this->particleGun;
 }
 
@@ -25,18 +26,9 @@ PrimaryGenerator * PrimaryGenerator::Singleton() {
 }
 
 void PrimaryGenerator::GeneratePrimaries(G4Event * anEvent) {
-    G4ParticleDefinition * definition = nullptr;
-    if(this->event->pid == G4Gamma::GammaDefinition()->GetPDGEncoding()) {
-        definition = G4Gamma::GammaDefinition();
-    }else if (this->event->pid == G4MuonMinus::MuonMinusDefinition()->GetPDGEncoding()) {
-        definition = G4MuonMinus::MuonMinusDefinition();
-    }else if (this->event->pid == G4MuonPlus::MuonPlusDefinition()->GetPDGEncoding()) {
-        definition = G4MuonPlus::MuonPlusDefinition();
-    }
-    else {
-        definition = G4Geantino::GeantinoDefinition();
-    }
-    particleGun->SetParticleDefinition(definition);
+    this->RandomState();
+    
+    particleGun->SetParticleDefinition(G4Gamma::GammaDefinition());
     
     // Forward primary energy.
     particleGun->SetParticleEnergy(this->event->energy * CLHEP::MeV);
@@ -59,12 +51,35 @@ void PrimaryGenerator::GeneratePrimaries(G4Event * anEvent) {
         )
     );
     
-    // Consume current event.
-    //
-    // Note that event weight would be lost at this point. Thus, we copy
-    // it locally, before incrementing the events counter.
-    this->weight = this->event->weight;
-    
     // Create primary vertex.
     particleGun->GeneratePrimaryVertex(anEvent);
+}
+
+void PrimaryGenerator::RandomState() {
+    const double cosTheta = 2.0 * G4UniformRand() - 1.0;
+    const double sinTheta = std::sqrt(1.0 - cosTheta*cosTheta);
+    const double phi = 2.0 * M_PI * G4UniformRand();
+    const double cosPhi = std::cos(phi);
+    const double sinPhi = std::sin(phi);
+    
+    /* Set momentum direction */
+    this->event->direction[0] = sinTheta * cosPhi;
+    this->event->direction[1] = sinTheta * sinPhi;
+    this->event->direction[2] = cosTheta;    
+    
+    const auto outerSize = DetectorConstruction::Singleton()->outerSize;
+    const auto innerSize = DetectorConstruction::Singleton()->innerSize;
+    
+    G4ThreeVector position(0.0, 0.0, 0.0);
+    while (
+        (std::fabs(position[0]) <= 0.5 * innerSize[0]) &&
+        (std::fabs(position[1]) <= 0.5 * innerSize[1]) &&
+        (std::fabs(position[2]) <= 0.5 * innerSize[2])
+        ) {
+        position[0] = outerSize[0] * (0.5 - G4UniformRand());
+        position[1] = outerSize[1] * (0.5 - G4UniformRand());
+        position[2] = outerSize[2] * (0.5 - G4UniformRand());
+    }
+    
+    for(int i = 0; i < 3; i++) this->event->position[i] = position[i] / CLHEP::cm;
 }

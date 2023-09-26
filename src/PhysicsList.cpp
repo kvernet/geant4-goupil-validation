@@ -59,9 +59,11 @@ void PhysicsList::DisableVerbosity() const {
 
 void PhysicsList::ConstructParticle() {
     this->decayPhysics->ConstructParticle();
+    this->emPhysics->ConstructParticle();
 }
 
 void PhysicsList::ConstructProcess() {
     AddTransportation();
+    this->decayPhysics->ConstructProcess();
     this->emPhysics->ConstructProcess();
 }

@@ -7,10 +7,7 @@
 class G4ParticleGun;
 class G4Event;
 
-struct PrimaryEvent {
-    /* Particle identifier, using PDG numering scheme. */
-    int pid;
-    
+struct EventState {
     /* Kinetic energy, in MeV. */
     double energy;
     
@@ -19,9 +16,6 @@ struct PrimaryEvent {
     
     /* Initial direction. */
     double direction[3];
-    
-    /* Monte-Carlo weight. */
-    double weight;
 };
 
 struct PrimaryGenerator : public G4VUserPrimaryGeneratorAction {
@@ -30,8 +24,9 @@ struct PrimaryGenerator : public G4VUserPrimaryGeneratorAction {
         
         void GeneratePrimaries(G4Event*) override;
         
-        const PrimaryEvent * event = nullptr;
-        double weight = 0.0;
+        void RandomState();
+        
+        EventState * event = nullptr;
     
     private:
         PrimaryGenerator();
