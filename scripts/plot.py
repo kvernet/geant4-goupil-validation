@@ -31,7 +31,7 @@ EventType = numpy.dtype(
     align=True
 )
 
-def getData(path="test.dat"):
+def getData(path="geant4-goupil-validation.bin"):
     with open(path) as f:
         header = numpy.fromfile(f, dtype=HeaderType, count=1)
         data = numpy.fromfile(f, dtype=EventType)
