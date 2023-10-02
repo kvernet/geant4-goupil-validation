@@ -26,8 +26,8 @@ G4VPhysicalVolume * DetectorConstruction::Construct() {
     {
         std::string name = "World";
         auto solid = new G4Box(name, 0.5*outerSize[0], 0.5*outerSize[1], 0.5*outerSize[2]);
-        auto material = manager->FindOrBuildMaterial("G4_AIR");
-        world = new G4LogicalVolume(solid, material, name);
+        this->material = manager->FindOrBuildMaterial("G4_AIR");
+        world = new G4LogicalVolume(solid, this->material, name);
     }
     this->worldVolume = world;
     
@@ -35,8 +35,7 @@ G4VPhysicalVolume * DetectorConstruction::Construct() {
     {
         std::string name = "Inner";
         auto solid = new G4Box(name, 0.5*innerSize[0], 0.5*innerSize[1], 0.5*innerSize[2]);
-        auto material = manager->FindOrBuildMaterial("G4_AIR");
-        inner = new G4LogicalVolume(solid, material, name);
+        inner = new G4LogicalVolume(solid, this->material, name);
         new G4PVPlacement(
             nullptr,
             G4ThreeVector(0.0, 0.0, 0.0),

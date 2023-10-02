@@ -1,6 +1,7 @@
 #ifndef DETECTOR_CONSTRUCTION_H
 #define DETECTOR_CONSTRUCTION_H
 
+#include "G4Material.hh"
 #include "G4VUserDetectorConstruction.hh"
 #include "G4VPhysicalVolume.hh"
 
@@ -12,6 +13,7 @@ struct DetectorConstruction : public G4VUserDetectorConstruction {
         G4double outerSize[3], innerSize[3];
         
         G4LogicalVolume * worldVolume = nullptr;
+        G4Material * material;
     
     private:
         DetectorConstruction();

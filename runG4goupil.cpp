@@ -3,6 +3,8 @@
 #include "PrimaryGenerator.hh"
 #include "SteppingAction.hh"
 /* Geant4 interface */
+#include "G4EmCalculator.hh"
+#include "G4Gamma.hh"
 #include "G4RunManagerFactory.hh"
 
 
@@ -77,6 +79,39 @@ int main(int argc, char **argv) {
     
     runManager->BeamOn(params.header.events);
     
+    // Dump cross-sections.
+    G4EmCalculator emCal;
+    auto particle = G4Gamma::GammaDefinition();
+    G4ProcessVector& processes = *particle->GetProcessManager()->GetProcessList();
+    G4double eMin = 1E-03 * CLHEP::MeV;
+    G4double eMax = 1E+01 * CLHEP::MeV;
+    int ne = 401;
+    double re = std::log(eMax / eMin) / (ne - 1);
+    auto material = DetectorConstruction::Singleton()->material;
+    
+    auto filename = std::string("share/data/cross-sections-") + params.header.model + std::string(".txt");
+    stream = std::fopen(filename.c_str(), "w+");
+    fprintf(stream, "# energy");
+    for (size_t j = 0; j < processes.size(); j++) {
+        G4VProcess * proc = processes[G4int(j)];
+        if (proc->GetProcessName() == "Transportation") continue;
+        fprintf(stream, " %s", proc->GetProcessName().c_str());
+    }
+    fprintf(stream, "\n");
+    
+    for (int i = 0; i < ne; i++) {
+        G4double energy = eMin * std::exp(i * re);
+        fprintf(stream, "%.5E", energy);
+        for (size_t j = 0; j < processes.size(); j++) {
+            G4VProcess * proc = processes[G4int(j)];
+            if (proc->GetProcessName() == "Transportation") continue;
+            G4double sigma = emCal.GetCrossSectionPerVolume(
+                energy, particle, proc->GetProcessName(), material) / material->GetTotNbOfAtomsPerVolume();
+            fprintf(stream, " %.5E", sigma / CLHEP::barn);
+        }
+        fprintf(stream, "\n");
+    }
+    std::fclose(stream);
     
     delete runManager;
     return 0;
