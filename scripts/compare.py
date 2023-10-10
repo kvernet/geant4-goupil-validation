@@ -16,7 +16,8 @@ HeaderType = numpy.dtype(
     [
         ("model", "S32"),
         ("energy", "f8"),
-        ("events", "i4"),
+        ("requested", "u8"),
+        ("events", "u8"),
     ],
     align=True
 )
