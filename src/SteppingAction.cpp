@@ -7,10 +7,11 @@
 struct Event {
     int eventid;
     int tid;
-    // XXX int parent (track->GetParentID());
+    int parent;
     int pid;
     struct EventState primary;
     struct EventState detected;
+    char creator[8];
 };
 
 void SteppingAction::UserSteppingAction(const G4Step * step) {
@@ -19,8 +20,6 @@ void SteppingAction::UserSteppingAction(const G4Step * step) {
     if ((physical == nullptr) || (physical->GetLogicalVolume() == DetectorConstruction::Singleton()->worldVolume)) {
         return;
     }
-    
-    G4cout << "XXX" << G4endl;
     
     auto && track = step->GetTrack();
     track->SetTrackStatus(fStopAndKill);
@@ -31,7 +30,21 @@ void SteppingAction::UserSteppingAction(const G4Step * step) {
     event.pid = track->GetParticleDefinition()->GetPDGEncoding();
     
     auto && generator = PrimaryGenerator::Singleton();
-    event.primary = *generator->event; // XXX if tid == 1 else GetVertexPosition, etc.
+    if(event.tid == 1) {
+        event.parent = 0;
+        event.primary = *generator->event;
+        strcpy(event.creator, "primary");
+    }
+    else {
+        event.parent = track->GetParentID();
+        event.primary.energy = track->GetVertexKineticEnergy() / CLHEP::MeV;
+        for(int i = 0; i < 3; i++) {
+            event.primary.position[i] = track->GetVertexPosition()[i] / CLHEP::cm;
+            event.primary.direction[i] = track->GetVertexMomentumDirection()[i];
+        }
+        strncpy(event.creator, track->GetCreatorProcess()->GetProcessName().c_str(), sizeof(event.creator));        
+    }
+    
     
     auto && position = point->GetPosition();
     auto && direction = point->GetMomentumDirection();

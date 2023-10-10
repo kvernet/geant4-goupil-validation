@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 import sys
 sys.path.append("../geant4-goupil/scripts")
-from plot import Processor
+from plot import Processor, Histogramed
 
 
 ACTIVITY = 1E+04    # in Bq
@@ -16,7 +16,7 @@ HeaderType = numpy.dtype(
     [
         ("model", "S32"),
         ("energy", "f8"),
-        ("events", "i4")
+        ("events", "i4"),
     ],
     align=True
 )
@@ -33,9 +33,11 @@ EventType = numpy.dtype(
     [
         ("eventid", "i4"),
         ("tid", "i4"),
+        ("parent", "i4"),
         ("pid", "i4"),
         ("primary", StateType),
-        ("detected", StateType)
+        ("detected", StateType),
+        ("creator", "S8")
     ],
     align=True
 )
@@ -87,6 +89,8 @@ def histogram(energies, events, **kwargs):
     
     plt.errorbar(x=center, y=p, xerr=xerr, yerr=dp, **kwargs)
     
+    return Histogramed(center, p, xerr, dp)
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -106,12 +110,33 @@ if __name__ == "__main__":
     sel = (data["detected"]["energy"] < data["primary"]["energy"]) & (data["tid"] == 1)
     print(f"selected = {sum(sel)}")
     
+    cos_theta = numpy.sum(data["detected"]["direction"][sel] * data["primary"]["direction"][sel], axis=1)
+    # cos_theta = data["primary"]["direction"][data["tid"] == 1][:, 2]   
+    hist, center = numpy.histogram(cos_theta, bins=numpy.linspace(-1.0, 1.0, 41))
+    x = 0.5 * (center[1:] + center[:-1])
+    width = center[1] - center[0]
+    xerr = 0.5 * width
+    y = ACTIVITY * hist / (header["events"] * width)
+    yerr = ACTIVITY * numpy.sqrt(hist) / (header["events"] * width)
+    geant4_cos_theta = Histogramed(x, y, xerr, yerr)
+    
     backward = Processor("../geant4-goupil/share/goupil/backward.pkl.gz", EDGES)
     
     plt.figure(figsize=(12, 7))
-    histogram(data["detected"]["energy"][sel], header["events"], fmt='k.', label="Geant4")
+    geant4 = histogram(data["detected"]["energy"][sel], header["events"], fmt='k.', label="Geant4")
     backward.energy.errorbar(fmt="ro", label="Backward") 
     plt.xscale("log")
     plt.legend()
+    
+    plt.figure(figsize=(12, 7))
+    geant4_cos_theta.errorbar(fmt="ko", label="Geant4")
+    backward.costheta.errorbar(fmt="ro", label="Backward") 
+    plt.legend()
+    
+    # rel dif
+    delta = geant4.relative_difference(backward.energy)
+    plt.figure(figsize=(12, 7))
+    delta.errorbar(fmt="ko")
+    plt.xscale("log")
     
     plt.show()

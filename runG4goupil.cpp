@@ -1,4 +1,5 @@
 #include "DetectorConstruction.hh"
+#include "EventAction.hh"
 #include "PhysicsList.hh"
 #include "PrimaryGenerator.hh"
 #include "SteppingAction.hh"
@@ -8,12 +9,6 @@
 #include "G4RunManagerFactory.hh"
 
 
-struct header {
-    char model[32];
-    double energy;
-    long events;
-};
-
 struct parameters {
     char help[20];
     struct header header;
@@ -22,13 +17,15 @@ struct parameters {
         std::strcpy(header.model, "standard");
         header.energy = 1;
         header.events = 1000000;
+        header.generated = 0;
     }
 };
 
 
 
-struct parameters getParams(int argc, char** argv);
-void show_usage(const char* name);
+static struct parameters getParams(int argc, char** argv);
+static void show_usage(const char* name);
+static unsigned long getSeed();
 
 int main(int argc, char **argv) {
     struct parameters params = getParams(argc, argv);
@@ -39,6 +36,11 @@ int main(int argc, char **argv) {
         show_usage(argv[0]);
         return -1;
     }
+    
+    /* Set the Random engine */
+    G4Random::setTheEngine(new CLHEP::MTwistEngine);
+    unsigned long seed = getSeed();
+    G4Random::setTheSeed(seed);
     
     std::cout << "=== simulation parameters ===" << std::endl
             << "model      : " << params.header.model << std::endl
@@ -73,45 +75,13 @@ int main(int argc, char **argv) {
     runManager->SetUserAction(generator);
     runManager->SetUserAction(new SteppingAction(params.outputFile));
     
+    runManager->SetUserAction(new EventAction(params.outputFile, params.header.events, 10000));
+    
     runManager->Initialize();
     
     generator->event->energy = params.header.energy;
     
     runManager->BeamOn(params.header.events);
-    
-    // Dump cross-sections.
-    G4EmCalculator emCal;
-    auto particle = G4Gamma::GammaDefinition();
-    G4ProcessVector& processes = *particle->GetProcessManager()->GetProcessList();
-    G4double eMin = 1E-03 * CLHEP::MeV;
-    G4double eMax = 1E+01 * CLHEP::MeV;
-    int ne = 401;
-    double re = std::log(eMax / eMin) / (ne - 1);
-    auto material = DetectorConstruction::Singleton()->material;
-    
-    auto filename = std::string("share/data/cross-sections-") + params.header.model + std::string(".txt");
-    stream = std::fopen(filename.c_str(), "w+");
-    fprintf(stream, "# energy");
-    for (size_t j = 0; j < processes.size(); j++) {
-        G4VProcess * proc = processes[G4int(j)];
-        if (proc->GetProcessName() == "Transportation") continue;
-        fprintf(stream, " %s", proc->GetProcessName().c_str());
-    }
-    fprintf(stream, "\n");
-    
-    for (int i = 0; i < ne; i++) {
-        G4double energy = eMin * std::exp(i * re);
-        fprintf(stream, "%.5E", energy);
-        for (size_t j = 0; j < processes.size(); j++) {
-            G4VProcess * proc = processes[G4int(j)];
-            if (proc->GetProcessName() == "Transportation") continue;
-            G4double sigma = emCal.GetCrossSectionPerVolume(
-                energy, particle, proc->GetProcessName(), material) / material->GetTotNbOfAtomsPerVolume();
-            fprintf(stream, " %.5E", sigma / CLHEP::barn);
-        }
-        fprintf(stream, "\n");
-    }
-    std::fclose(stream);
     
     delete runManager;
     return 0;
@@ -150,4 +120,13 @@ void show_usage(const char* name) {
             << "\t-n,--events\tSpecify the number of events to generate" << std::endl
             << "\t-o,--output\tSpecify the output file"
             << std::endl;
+}
+
+unsigned long getSeed() {
+	/* Get a seed from /dev/urandom. */
+	unsigned long seed;
+	FILE * fid = std::fopen("/dev/urandom", "rb");
+	fread(&seed, sizeof(long), 1, fid);
+	fclose(fid);
+	return seed;
 }
