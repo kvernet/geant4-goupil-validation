@@ -65,10 +65,10 @@ void PrimaryGenerator::RandomState() {
     /* Set momentum direction */
     this->event->direction[0] = sinTheta * cosPhi;
     this->event->direction[1] = sinTheta * sinPhi;
-    this->event->direction[2] = cosTheta;    
+    this->event->direction[2] = cosTheta;
     
-    const auto outerSize = DetectorConstruction::Singleton()->outerSize;
-    const auto innerSize = DetectorConstruction::Singleton()->innerSize;
+    const auto outerSize = DetectorConstruction::Singleton()->worldSize;
+    const auto innerSize = DetectorConstruction::Singleton()->detectorSize;
     
     G4ThreeVector position(0.0, 0.0, 0.0);
     while (

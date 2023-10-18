@@ -10,25 +10,24 @@ include(${Geant4_USE_FILE})
 include_directories(${Geant4_INCLUDE_DIR})
 
 
-#link_directories(${CMAKE_INSTALL_PREFIX}/lib)
-#include_directories(${CMAKE_INSTALL_PREFIX}/include)
-
 # Geant4 goupil validation
 add_library(G4goupil SHARED
-    src/DetectorConstruction.cpp include/DetectorConstruction.hh
-    src/PhysicsList.cpp include/PhysicsList.hh
-    src/PrimaryGenerator.cpp include/PrimaryGenerator.hh
-    src/EventAction.cpp include/EventAction.hh
-    src/SteppingAction.cpp include/SteppingAction.hh
+    src/src/DetectorConstruction.cpp src/include/DetectorConstruction.hh
+    src/src/PhysicsList.cpp src/include/PhysicsList.hh
+    src/src/PrimaryGenerator.cpp src/include/PrimaryGenerator.hh
+    src/src/EventAction.cpp src/include/EventAction.hh
+    src/src/SteppingAction.cpp src/include/SteppingAction.hh
 )
 set_target_properties(G4goupil PROPERTIES VERSION ${G4GOUPIL_VERSION})
-target_include_directories(G4goupil PRIVATE include)
+target_include_directories(G4goupil PUBLIC src/include)
 target_link_libraries(G4goupil ${Geant4_LIBRARIES})
 
-add_executable(runG4goupil runG4goupil.cpp)
+add_executable(runG4goupil src/runG4goupil.cpp)
+set_target_properties(runG4goupil PROPERTIES
+    INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib
+)
 target_link_libraries(runG4goupil G4goupil)
-target_include_directories(runG4goupil PRIVATE include)
-install(TARGETS runG4goupil DESTINATION .)
+install(TARGETS runG4goupil DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
-install(TARGETS G4goupil DESTINATION lib)
-install(DIRECTORY include DESTINATION .)
+install(TARGETS G4goupil DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(DIRECTORY src/include DESTINATION ${CMAKE_INSTALL_PREFIX})

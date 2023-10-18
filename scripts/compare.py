@@ -16,7 +16,8 @@ HeaderType = numpy.dtype(
     [
         ("model", "S32"),
         ("energy", "f8"),
-        ("events", "i4"),
+        ("requested", "u8"),
+        ("events", "u8"),
     ],
     align=True
 )
@@ -107,12 +108,14 @@ if __name__ == "__main__":
     
     header, data = getData(args.files)
     
+    backward = Processor("../geant4-goupil/share/goupil/backward.pkl.gz", EDGES)
+    
     sel = (data["detected"]["energy"] < data["primary"]["energy"]) & (data["tid"] == 1)
     print(f"selected = {sum(sel)}")
     
     cos_theta = numpy.sum(data["detected"]["direction"][sel] * data["primary"]["direction"][sel], axis=1)
     # cos_theta = data["primary"]["direction"][data["tid"] == 1][:, 2]   
-    hist, center = numpy.histogram(cos_theta, bins=numpy.linspace(-1.0, 1.0, 41))
+    hist, center = numpy.histogram(cos_theta, bins=numpy.linspace(-1.0, 1.0, len(backward.costheta.x) + 1))
     x = 0.5 * (center[1:] + center[:-1])
     width = center[1] - center[0]
     xerr = 0.5 * width
@@ -120,7 +123,7 @@ if __name__ == "__main__":
     yerr = ACTIVITY * numpy.sqrt(hist) / (header["events"] * width)
     geant4_cos_theta = Histogramed(x, y, xerr, yerr)
     
-    backward = Processor("../geant4-goupil/share/goupil/backward.pkl.gz", EDGES)
+    
     
     plt.figure(figsize=(12, 7))
     geant4 = histogram(data["detected"]["energy"][sel], header["events"], fmt='k.', label="Geant4")

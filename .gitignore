@@ -1,7 +1,8 @@
-bin
-build
-scripts/__pycache__/
-share
+/bin
+/build
+/lib
+/scripts/__pycache__/
+/share
 
 *.dat
 *.bin
