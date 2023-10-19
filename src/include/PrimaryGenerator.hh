@@ -27,6 +27,7 @@ struct PrimaryGenerator : public G4VUserPrimaryGeneratorAction {
         void RandomState();
         
         EventState * event = nullptr;
+        bool isInAir = true;
     
     private:
         PrimaryGenerator();

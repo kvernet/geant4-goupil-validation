@@ -23,12 +23,14 @@ void DetectorConstruction::ComputeSize() {
     detectorSize[0] = detectorSize[1] = 20.0*CLHEP::m;
     detectorSize[2] = 10.0*CLHEP::m;
     
-    airSize[0] = airSize[1] = airSize[2] = 2.0*CLHEP::km;
-    groundSize[0] = groundSize[1] = groundSize[2] = 2.0*CLHEP::km;
-    
-    for(int i = 0; i < 3; i++) {
-        worldSize[i] = 1.1 * (groundSize[i] + airSize[i]);
+    airSize[0] = airSize[1] = 2.0*CLHEP::km;
+    airSize[2] = 1*CLHEP::km;
+    groundSize[2] = 1*CLHEP::m;
+    for(int i = 0; i < 2; i++) {
+        worldSize[i] = groundSize[i] = airSize[i];
     }
+    worldSize[2] = groundSize[2] + airSize[2];
+    detectorOffset = 0.5 * (-airSize[2] + detectorSize[2] + groundSize[2]) + 5.0 * CLHEP::cm;
 }
 
 G4VPhysicalVolume * DetectorConstruction::Construct() {
@@ -46,32 +48,30 @@ G4VPhysicalVolume * DetectorConstruction::Construct() {
     {
         std::string name = "Air";
         auto material = manager->FindOrBuildMaterial("G4_AIR");
-        G4ThreeVector pos(0.0, 0.0, 0.5*airSize[2]);
-        this->PlaceInVolume(name, airSize, material, nullptr, pos, world);
+        G4ThreeVector pos(0.0, 0.0, 0.5*groundSize[2]);
+        airVolume = this->PlaceInVolume(name, airSize, material, nullptr, pos, world);
     }
     
     
     G4LogicalVolume * groundVolume = nullptr;
     {
         std::string name = "Ground";
-        /* Standard rock definition https://pdg.lbl.gov/2023/AtomicNuclearProperties/HTML/standard_rock.html */
-        G4Element * RockElement = new G4Element("StandardRock",
-                "StandardRock", 11., 22.*CLHEP::g/CLHEP::mole);
+        auto element = manager->FindOrBuildMaterial("G4_Na");
         auto material = new G4Material("StandardRock",
                 2.65*CLHEP::g/CLHEP::cm3, 1, kStateSolid);
-        material->AddElement(RockElement, 1);
-        G4ThreeVector pos(0.0, 0.0, -0.5*groundSize[2]);
-        this->PlaceInVolume(name, groundSize, material, nullptr, pos, world);
+        material->AddMaterial(element, 1.0);        
+        G4ThreeVector pos(0.0, 0.0, -0.5*airSize[2]);
+        groundVolume = this->PlaceInVolume(name, groundSize, material, nullptr, pos, world);
     }
     
     G4LogicalVolume * detVolume = nullptr;
     {
-        std::string name = "Det";
-        auto material = manager->FindOrBuildMaterial("G4_Pb"); //TODO
-        G4ThreeVector pos(0.0, 0.0, 0.5*detectorSize[2]);
-        this->PlaceInVolume(name, detectorSize, material, nullptr, pos, world);
-    }    
-    
+        std::string name = "Detector";
+        auto material = manager->FindOrBuildMaterial("G4_AIR");
+        G4ThreeVector pos(0.0, 0.0, this->detectorOffset - 0.5 * groundSize[2]);
+        detVolume = this->PlaceInVolume(name, detectorSize, material, nullptr, pos, airVolume);
+    }
+    this->detectorVolume = detVolume;
     
     return new G4PVPlacement(
         nullptr,
@@ -84,7 +84,7 @@ G4VPhysicalVolume * DetectorConstruction::Construct() {
     );
 }
 
-void DetectorConstruction::PlaceInVolume(const std::string& name,
+G4LogicalVolume * DetectorConstruction::PlaceInVolume(const std::string& name,
         G4double dim[3], G4Material * material,
         G4RotationMatrix * rot, G4ThreeVector pos,
         G4LogicalVolume * motherVolume) {
@@ -99,4 +99,5 @@ void DetectorConstruction::PlaceInVolume(const std::string& name,
         false,
         0
     );
+    return logicalVolume;
 }

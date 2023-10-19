@@ -12,6 +12,7 @@
 struct parameters {
     char help[20];
     struct header header;
+    bool isInAir;
     char outputFile[255];
     parameters() : help(""), outputFile("geant4-goupil-validation.bin") {
         std::strcpy(header.model, "standard");
@@ -72,6 +73,7 @@ int main(int argc, char **argv) {
     physics->DisableVerbosity();
     
     auto && generator = PrimaryGenerator::Singleton();
+    generator->isInAir = params.isInAir;
     runManager->SetUserAction(generator);
     runManager->SetUserAction(new SteppingAction(params.outputFile));
     
@@ -91,6 +93,7 @@ int main(int argc, char **argv) {
 
 struct parameters getParams(int argc, char** argv) {
     struct parameters params;
+    params.isInAir = true;
     for(int i = 1; i < argc; i += 2) {
         if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             std::strcpy(params.help, "-h");
@@ -103,6 +106,9 @@ struct parameters getParams(int argc, char** argv) {
         }
         if(strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--events") == 0) {
             params.header.events = std::stol(argv[i + 1]);
+        }
+        if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--in-air") == 0) {
+            params.isInAir = (bool)std::stoi(argv[i + 1]);
         }
         if(strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) {
             std::strcpy(params.outputFile, argv[i + 1]);
@@ -118,6 +124,7 @@ void show_usage(const char* name) {
             << "\t-m,--model\tSpecify the physics model" << std::endl
             << "\t-e,--energy\tSpecify the kinetic energy in [MeV]" << std::endl
             << "\t-n,--events\tSpecify the number of events to generate" << std::endl
+            << "\t-i,--in-air\tSpecify if source is Air or not" << std::endl
             << "\t-o,--output\tSpecify the output file"
             << std::endl;
 }

@@ -64,8 +64,6 @@ def getData(paths):
     sel1 = (data["detected"]["energy"] < data["primary"]["energy"]) & (data["tid"] == 1)
     sel2 = data["tid"] > 1
     
-    print(events)
-    
     p0 = len(data[sel0]) * ACTIVITY / events
     p1 = len(data[sel1]) * ACTIVITY / events
     p2 = len(data[sel2]) * ACTIVITY / events
@@ -113,6 +111,18 @@ if __name__ == "__main__":
     sel = (data["detected"]["energy"] < data["primary"]["energy"]) & (data["tid"] == 1)
     print(f"selected = {sum(sel)}")
     
+    distance = numpy.linalg.norm(
+        data["detected"]["position"][sel] - data["primary"]["position"][sel],
+        axis = 1
+    )
+    hist, center = numpy.histogram(distance, bins=numpy.linspace(0.0, 100.0, 51))
+    x = 0.5 * (center[1:] + center[:-1])
+    width = center[1] - center[0]
+    xerr = 0.5 * width
+    y = ACTIVITY * hist / (header["events"] * width)
+    yerr = ACTIVITY * numpy.sqrt(hist) / (header["events"] * width)
+    geant4_distance = Histogramed(x, y, xerr, yerr)
+    
     cos_theta = numpy.sum(data["detected"]["direction"][sel] * data["primary"]["direction"][sel], axis=1)
     # cos_theta = data["primary"]["direction"][data["tid"] == 1][:, 2]   
     hist, center = numpy.histogram(cos_theta, bins=numpy.linspace(-1.0, 1.0, len(backward.costheta.x) + 1))
@@ -129,6 +139,12 @@ if __name__ == "__main__":
     geant4 = histogram(data["detected"]["energy"][sel], header["events"], fmt='k.', label="Geant4")
     backward.energy.errorbar(fmt="ro", label="Backward") 
     plt.xscale("log")
+    plt.legend()
+    
+    plt.figure(figsize=(12, 7))
+    geant4_distance.errorbar(fmt="ko", label="Geant4")
+    plt.yscale("log")
+    plt.xlabel("distance [cm]")
     plt.legend()
     
     plt.figure(figsize=(12, 7))

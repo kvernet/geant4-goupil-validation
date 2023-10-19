@@ -17,7 +17,7 @@ struct Event {
 void SteppingAction::UserSteppingAction(const G4Step * step) {
     auto && point = step->GetPostStepPoint();
     auto && physical = point->GetTouchableHandle()->GetVolume();
-    if ((physical == nullptr) || (physical->GetLogicalVolume() == DetectorConstruction::Singleton()->worldVolume)) {
+    if ((physical == nullptr) || (physical->GetLogicalVolume() != DetectorConstruction::Singleton()->detectorVolume)) {
         return;
     }
     
@@ -30,6 +30,7 @@ void SteppingAction::UserSteppingAction(const G4Step * step) {
     event.pid = track->GetParticleDefinition()->GetPDGEncoding();
     
     auto && generator = PrimaryGenerator::Singleton();
+    auto && geometry = DetectorConstruction::Singleton();
     if(event.tid == 1) {
         event.parent = 0;
         event.primary = *generator->event;
@@ -44,7 +45,7 @@ void SteppingAction::UserSteppingAction(const G4Step * step) {
         }
         strncpy(event.creator, track->GetCreatorProcess()->GetProcessName().c_str(), sizeof(event.creator));        
     }
-    
+    geometry->ToDetector(event.primary.position);
     
     auto && position = point->GetPosition();
     auto && direction = point->GetMomentumDirection();
@@ -53,6 +54,7 @@ void SteppingAction::UserSteppingAction(const G4Step * step) {
         event.detected.position[i] = position[i] / CLHEP::cm;
         event.detected.direction[i] = direction[i];
     }
+    geometry->ToDetector(event.detected.position);
     
     FILE * stream = fopen(this->fileName.c_str(), "ab");
     if(stream) {

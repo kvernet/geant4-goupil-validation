@@ -67,18 +67,34 @@ void PrimaryGenerator::RandomState() {
     this->event->direction[1] = sinTheta * sinPhi;
     this->event->direction[2] = cosTheta;
     
-    const auto outerSize = DetectorConstruction::Singleton()->worldSize;
-    const auto innerSize = DetectorConstruction::Singleton()->detectorSize;
-    
+    auto && geometry = DetectorConstruction::Singleton();
     G4ThreeVector position(0.0, 0.0, 0.0);
-    while (
-        (std::fabs(position[0]) <= 0.5 * innerSize[0]) &&
-        (std::fabs(position[1]) <= 0.5 * innerSize[1]) &&
-        (std::fabs(position[2]) <= 0.5 * innerSize[2])
-        ) {
-        position[0] = outerSize[0] * (0.5 - G4UniformRand());
-        position[1] = outerSize[1] * (0.5 - G4UniformRand());
-        position[2] = outerSize[2] * (0.5 - G4UniformRand());
+    if(this->isInAir) { 
+        const auto airSize = geometry->airSize;
+        const auto groundSize = geometry->groundSize;
+        const auto detectorSize = geometry->detectorSize;
+        const auto airOffset = 0.5 * geometry->groundSize[2];
+        const auto detectorOffset = geometry->detectorOffset;
+        for (;;) {
+            position[0] = airSize[0] * (0.5 - G4UniformRand());
+            position[1] = airSize[1] * (0.5 - G4UniformRand());
+            position[2] = airSize[2] * (0.5 - G4UniformRand()) + airOffset;
+            
+            if ((std::fabs(position[0]) > 0.5 * detectorSize[0]) ||
+                (std::fabs(position[1]) > 0.5 * detectorSize[1]) ||
+                (std::fabs(position[2] - detectorOffset) > 0.5 * detectorSize[2])
+            ) {
+                break;
+            }
+        }
+    }
+    else {
+        const auto groundSize = geometry->groundSize;
+        const auto detectorSize = geometry->detectorSize;
+        const auto offset = -0.5 * geometry->airSize[2];
+        position[0] = (detectorSize[0] + 4.0 * groundSize[2]) * (0.5 - G4UniformRand());
+        position[1] = (detectorSize[1] + 4.0 * groundSize[2]) * (0.5 - G4UniformRand());
+        position[2] = groundSize[2] * (0.5 - G4UniformRand()) + offset;
     }
     
     for(int i = 0; i < 3; i++) this->event->position[i] = position[i] / CLHEP::cm;
