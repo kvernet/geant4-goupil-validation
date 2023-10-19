@@ -4,6 +4,9 @@ project(G4GOUPIL
     VERSION 0.1.0
 )
 
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+
 # Geant4 includes
 find_package(Geant4 REQUIRED)
 include(${Geant4_USE_FILE})
