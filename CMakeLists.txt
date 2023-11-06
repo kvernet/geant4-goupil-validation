@@ -20,6 +20,7 @@ add_library(G4goupil SHARED
     src/src/PrimaryGenerator.cpp src/include/PrimaryGenerator.hh
     src/src/EventAction.cpp src/include/EventAction.hh
     src/src/SteppingAction.cpp src/include/SteppingAction.hh
+    src/src/StackingAction.cpp src/include/StackingAction.hh
 )
 set_target_properties(G4goupil PROPERTIES VERSION ${G4GOUPIL_VERSION})
 target_include_directories(G4goupil PUBLIC src/include)
