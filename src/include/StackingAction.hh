@@ -9,7 +9,11 @@ struct StackingAction : public G4UserStackingAction {
         static StackingAction * Singleton();
         G4ClassificationOfNewTrack ClassifyNewTrack(const G4Track *);
 
+        void PrintSecondaries() const;
+
         bool keepSecondaries = true;
+        std::map<std::pair<int, std::string>, long> secondaries;
+
         
     private:
         StackingAction() = default;

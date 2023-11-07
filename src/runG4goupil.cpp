@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
             << "energy          : " << params.header.energy << " MeV" << std::endl
             << "events          : " << params.header.events << std::endl
             << "in air          : " << params.isInAir << std::endl
-            << "keep kecondaries: " << params.keepSecondaries << std::endl
+            << "keep secondaries: " << params.keepSecondaries << std::endl
             << "output file     : " << params.outputFile << std::endl;
     
     FILE * stream = fopen(params.outputFile, "wb");
@@ -92,6 +92,10 @@ int main(int argc, char **argv) {
     
     runManager->BeamOn(params.header.events);
     
+    if (params.keepSecondaries) {
+        stacking->PrintSecondaries();
+    }
+
     delete runManager;
     return 0;
 }
