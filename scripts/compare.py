@@ -106,7 +106,8 @@ if __name__ == "__main__":
     
     header, data = getData(args.files)
     
-    backward = Processor("../geant4-goupil/share/goupil/backward.pkl.gz", EDGES)
+    forward = Processor("../geant4-goupil/share/goupil/forward.1.1.pkl.gz", EDGES, source_index = 1)
+    backward = Processor("../geant4-goupil/share/goupil/backward.1.pkl.gz", EDGES, source_index = 1)
     
     sel = (data["detected"]["energy"] < data["primary"]["energy"]) & (data["tid"] == 1)
     print(f"selected = {sum(sel)}")
@@ -137,8 +138,10 @@ if __name__ == "__main__":
     
     plt.figure(figsize=(12, 7))
     geant4 = histogram(data["detected"]["energy"][sel], header["events"], fmt='k.', label="Geant4")
+    forward.energy.errorbar(fmt="bo", label="Forward") 
     backward.energy.errorbar(fmt="ro", label="Backward") 
     plt.xscale("log")
+    plt.xlabel("energy [MeV]")
     plt.legend()
     
     plt.figure(figsize=(12, 7))
@@ -148,14 +151,21 @@ if __name__ == "__main__":
     plt.legend()
     
     plt.figure(figsize=(12, 7))
-    geant4_cos_theta.errorbar(fmt="ko", label="Geant4")
+    geant4_cos_theta.errorbar(fmt="k.", label="Geant4")
+    forward.costheta.errorbar(fmt="bo", label="Forward") 
     backward.costheta.errorbar(fmt="ro", label="Backward") 
+    plt.xlabel(r"$\cos\theta$")
     plt.legend()
     
     # rel dif
-    delta = geant4.relative_difference(backward.energy)
+    delta_f = geant4.relative_difference(forward.energy)
+    delta_b = geant4.relative_difference(backward.energy)
     plt.figure(figsize=(12, 7))
-    delta.errorbar(fmt="ko")
+    plt.plot(geant4.x, numpy.zeros(geant4.x.shape), "k-")
+    delta_f.errorbar(fmt="bo", label="Forward")
+    delta_b.errorbar(fmt="ro", label="Backward")
     plt.xscale("log")
+    plt.xlabel("energy [MeV]")
+    plt.legend()
     
     plt.show()
