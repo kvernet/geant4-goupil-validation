@@ -8,6 +8,8 @@ import sys
 sys.path.append("../geant4-goupil/scripts")
 from plot import Processor, Histogramed
 
+plt.style.use("scripts/paper.mplstyle")
+
 
 ACTIVITY = 1E+04    # in Bq
 EDGES = numpy.logspace(-2, 0, 21)
@@ -134,7 +136,7 @@ if __name__ == "__main__":
     yerr = ACTIVITY * numpy.sqrt(hist) / (header["events"] * width)
     geant4_cos_theta = Histogramed(x, y, xerr, yerr)
     
-    
+    os.makedirs("plots", exist_ok=True)
     
     plt.figure(figsize=(12, 7))
     geant4 = histogram(data["detected"]["energy"][sel], header["events"], fmt='k.', label="Geant4")
@@ -142,7 +144,9 @@ if __name__ == "__main__":
     backward.energy.errorbar(fmt="ro", label="Backward") 
     plt.xscale("log")
     plt.xlabel("energy [MeV]")
+    plt.ylabel("rate [Hz/MeV]")
     plt.legend()
+    plt.savefig("plots/energy-absolute.pdf")
     
     plt.figure(figsize=(12, 7))
     geant4_distance.errorbar(fmt="ko", label="Geant4")
@@ -155,7 +159,9 @@ if __name__ == "__main__":
     forward.costheta.errorbar(fmt="bo", label="Forward") 
     backward.costheta.errorbar(fmt="ro", label="Backward") 
     plt.xlabel(r"$\cos\theta$")
+    plt.ylabel("rate [Hz]")
     plt.legend()
+    plt.savefig("plots/angle-absolute.pdf")
     
     # rel dif
     delta_f = geant4.relative_difference(forward.energy)
@@ -166,6 +172,8 @@ if __name__ == "__main__":
     delta_b.errorbar(fmt="ro", label="Backward")
     plt.xscale("log")
     plt.xlabel("energy [MeV]")
+    plt.ylabel(r"relative difference [\%]")
     plt.legend()
+    plt.savefig("plots/energy-relative.pdf")
     
     plt.show()
