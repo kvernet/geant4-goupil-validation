@@ -1,6 +1,7 @@
 /bin
 /build
 /lib
+/plots
 /scripts/__pycache__/
 /share
 
