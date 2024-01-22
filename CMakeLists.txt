@@ -26,6 +26,7 @@ add_library(G4goupil SHARED
 set_target_properties(G4goupil PROPERTIES VERSION ${G4GOUPIL_VERSION})
 target_include_directories(G4goupil PUBLIC src/include)
 target_link_libraries(G4goupil ${Geant4_LIBRARIES})
+target_compile_options(G4goupil PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 add_executable(runG4goupil src/runG4goupil.cpp)
 set_target_properties(runG4goupil PROPERTIES

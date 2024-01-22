@@ -52,8 +52,6 @@ G4VPhysicalVolume * DetectorConstruction::Construct() {
         airVolume = this->PlaceInVolume(name, airSize, material, nullptr, pos, world);
     }
     
-    
-    G4LogicalVolume * groundVolume = nullptr;
     {
         std::string name = "Ground";
         auto element = manager->FindOrBuildMaterial("G4_Na");
@@ -61,7 +59,7 @@ G4VPhysicalVolume * DetectorConstruction::Construct() {
                 2.65*CLHEP::g/CLHEP::cm3, 1, kStateSolid);
         material->AddMaterial(element, 1.0);        
         G4ThreeVector pos(0.0, 0.0, -0.5*airSize[2]);
-        groundVolume = this->PlaceInVolume(name, groundSize, material, nullptr, pos, world);
+        this->PlaceInVolume(name, groundSize, material, nullptr, pos, world);
     }
     
     G4LogicalVolume * detVolume = nullptr;

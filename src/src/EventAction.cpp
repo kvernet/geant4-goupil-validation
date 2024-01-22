@@ -1,8 +1,7 @@
 #include "EventAction.hh"
 
 EventAction::EventAction (std::string fName, size_t events, size_t p) :
-        fileName(fName), left(events), generated(0), period(p) {
-
+        fileName(fName), generated(0), left(events), period(p) {
 }
 
 void EventAction::EndOfEventAction (const G4Event* ) {

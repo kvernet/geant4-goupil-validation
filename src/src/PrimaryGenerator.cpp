@@ -96,7 +96,7 @@ void PrimaryGenerator::RandomState() {
     G4ThreeVector position(0.0, 0.0, 0.0);
     if(this->isInAir) { 
         const auto airSize = geometry->airSize;
-        const auto groundSize = geometry->groundSize;
+        //const auto groundSize = geometry->groundSize;
         const auto detectorSize = geometry->detectorSize;
         const auto airOffset = 0.5 * geometry->groundSize[2];
         const auto detectorOffset = geometry->detectorOffset;
