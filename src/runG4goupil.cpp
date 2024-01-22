@@ -18,7 +18,7 @@ struct parameters {
     char outputFile[255];
     parameters() : help(""), outputFile("geant4-goupil-validation.bin") {
         std::strcpy(header.model, "standard");
-        header.energy = 1;
+        header.energy = -1.0;
         header.events = 1000000;
         header.generated = 0;
     }
@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     struct parameters params = getParams(argc, argv);
     if(strcmp(params.help, "-h") == 0 || strcmp(params.help, "--help") == 0 ||
             strcmp(params.header.model, "") == 0 ||
-            params.header.energy <= 0 || params.header.events <= 0 ||
+            params.header.events <= 0 ||
             strcmp(params.outputFile, "") == 0) {
         show_usage(argv[0]);
         return -1;
@@ -44,10 +44,18 @@ int main(int argc, char **argv) {
     G4Random::setTheEngine(new CLHEP::MTwistEngine);
     unsigned long seed = getSeed();
     G4Random::setTheSeed(seed);
+
+    auto coutEnergy = [&params]() {
+        if (params.header.energy > 0.0) {
+            return std::to_string(params.header.energy) + " MeV";
+        } else {
+            return std::string("(spectrum)");
+        }
+    };
     
     std::cout << "=== simulation parameters ===" << std::endl
             << "model           : " << params.header.model << std::endl
-            << "energy          : " << params.header.energy << " MeV" << std::endl
+            << "energy          : " << coutEnergy() << std::endl
             << "events          : " << params.header.events << std::endl
             << "in air          : " << params.isInAir << std::endl
             << "keep secondaries: " << params.keepSecondaries << std::endl

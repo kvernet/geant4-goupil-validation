@@ -10,6 +10,18 @@ PrimaryGenerator::PrimaryGenerator() : G4VUserPrimaryGeneratorAction() {
     this->event = new EventState;
     G4int n_particle = 1;
     this->particleGun = new G4ParticleGun(n_particle);
+
+    // Normalize intensities.
+    double norm = 0.0;
+    for (auto pair: this->spectrum) {
+        norm += pair.second;
+    }
+    norm = 1.0 / norm;
+    double cdf = 0.0;
+    for (auto &pair: this->spectrum) {
+        cdf += pair.second * norm;
+        pair.second = cdf;
+    }
 }
 
 PrimaryGenerator::~PrimaryGenerator() {
@@ -30,8 +42,21 @@ void PrimaryGenerator::GeneratePrimaries(G4Event * anEvent) {
     
     particleGun->SetParticleDefinition(G4Gamma::GammaDefinition());
     
-    // Forward primary energy.
-    particleGun->SetParticleEnergy(this->event->energy * CLHEP::MeV);
+    // Forward or sample the primary energy.
+    double energy;
+    if (this->event->energy > 0.0) {
+        energy = this->event->energy;
+    } else {
+        energy = this->spectrum.back().first;
+        const double u = G4UniformRand();
+        for (auto pair: this->spectrum) {
+            if (u <= pair.second) {
+                energy = pair.first;
+                break;
+            }
+        }
+    }
+    particleGun->SetParticleEnergy(energy * CLHEP::MeV);
     
     // Forward primary direction.
     auto direction = G4ThreeVector(
