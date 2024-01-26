@@ -54,10 +54,7 @@ G4VPhysicalVolume * DetectorConstruction::Construct() {
     
     {
         std::string name = "Ground";
-        auto element = manager->FindOrBuildMaterial("G4_Na");
-        auto material = new G4Material("StandardRock",
-                2.65*CLHEP::g/CLHEP::cm3, 1, kStateSolid);
-        material->AddMaterial(element, 1.0);        
+        auto material = manager->FindOrBuildMaterial("G4_CALCIUM_CARBONATE");
         G4ThreeVector pos(0.0, 0.0, -0.5*airSize[2]);
         this->PlaceInVolume(name, groundSize, material, nullptr, pos, world);
     }
