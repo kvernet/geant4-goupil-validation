@@ -72,11 +72,17 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
     
-    auto buffer = std::cout.rdbuf();
-    std::cout.rdbuf(nullptr); /* Disable cout temporarly. */
-    /* Construct the default run manager */
-    auto * runManager = G4RunManagerFactory::CreateRunManager(G4RunManagerType::Default);
-    std::cout.rdbuf(buffer);
+    G4RunManager * runManager;
+    if (!DetectorConstruction::Singleton()->check_overlaps) {
+        auto buffer = std::cout.rdbuf();
+        std::cout.rdbuf(nullptr); /* Disable cout temporarly. */
+        /* Construct the default run manager */
+        runManager = G4RunManagerFactory::CreateRunManager(G4RunManagerType::Default);
+        std::cout.rdbuf(buffer);
+    }
+    else {
+        runManager = G4RunManagerFactory::CreateRunManager(G4RunManagerType::Default);
+    }
     
     /* Set mandatory initialization classes */
     runManager->SetUserInitialization(DetectorConstruction::Singleton());

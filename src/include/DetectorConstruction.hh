@@ -22,6 +22,7 @@ struct DetectorConstruction : public G4VUserDetectorConstruction {
         G4LogicalVolume * worldVolume = nullptr;
         G4LogicalVolume * detectorVolume = nullptr;
         G4Material * material;
+        G4bool check_overlaps = false;
     
     private:
         DetectorConstruction();

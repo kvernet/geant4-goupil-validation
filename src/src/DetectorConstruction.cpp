@@ -75,7 +75,8 @@ G4VPhysicalVolume * DetectorConstruction::Construct() {
         "World",
         nullptr,
         false,
-        0
+        0,
+        this->check_overlaps
     );
 }
 
@@ -92,7 +93,8 @@ G4LogicalVolume * DetectorConstruction::PlaceInVolume(const std::string& name,
         name,
         motherVolume,
         false,
-        0
+        0,
+        this->check_overlaps
     );
     return logicalVolume;
 }
